@@ -1,16 +1,34 @@
-import { fetchMap } from "@/lib/fetchMap";
-import Image from "next/image";
+'use client';
 
-export default async function Home() {
-  const map = await fetchMap();
+import { fetchDiagrams } from "@/db/queries/fetchDiagrams";
+import type { Diagram } from "@prisma/client";
+import { useEffect, useState } from "react";
+
+export default function Home() {
+  const [diagrams, setDiagrams] = useState<Partial<Diagram>[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setDiagrams(await fetchDiagrams());
+    }
+    console.log('euseffect');
+    fetch();
+  }, [])
 
   return (
-    <main className="flex flex-row">
-      <h1>{map?.title}</h1>
-      {map &&
-        <div dangerouslySetInnerHTML={{ __html: map.map.toString() }} />
-      }
+    <main>
+      <h1>Diagrams</h1>
+      <ul>
+        {diagrams.map((diagram) => (
+          <li key={diagram.id}>
+            <a href={`/diagrams/${diagram.id}`}>{diagram.title}</a>
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
-        // <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidyMid slice">
+// <svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidyMid slice">
+// {map &&
+//   <div dangerouslySetInnerHTML={{ __html: map.map.toString() }} />
+      // }
