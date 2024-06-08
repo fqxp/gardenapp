@@ -1,59 +1,81 @@
 'use client';
 
-import SvgDiagram from "@/components/SvgDiagram";
-import { fetchDiagram } from "@/db/queries/fetchDiagram";
-import type { Diagram } from "@prisma/client";
-import { Play } from "next/font/google";
 import { useEffect, useState } from "react";
 
+import DetailView from "@/components/DetailView";
+import SvgDiagram from "@/components/SvgDiagram";
+import { fetchDiagram } from "@/db/queries/fetchDiagram";
+import type { DiagramWithFeatures } from "@/db/queries/fetchDiagram";
+import { Feature } from "@prisma/client";
+
 export default function Diagrams({ params: { id } }: { params: { id: string } }) {
-  const [diagram, setDiagram] = useState<Partial<Diagram> | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [diagram, setDiagram] = useState<DiagramWithFeatures | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
+  const [hoveredFeature, setHoveredFeature] = useState<Feature | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       const diagram = await fetchDiagram(parseInt(id, 10));
       setDiagram(diagram);
+      console.log(JSON.stringify(diagram))
     }
 
     fetch();
   }, [id])
 
-  if (!diagram) {
-    return <div>Loading ...</div>;
+  useEffect(() => {
+    document.getElementById(hoveredFeature?.svgId)
+  }, [hoveredFeature])
+
+  const findFeatureByElement = (el: Element) => {
+    if (el.namespaceURI !== 'http://www.w3.org/2000/svg') return null;
+
+    return diagram.features.find(
+      (diagramEl) => diagramEl.svgId === el.id
+    ) || null;
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    const el = e.target as Element;
-    if (el.hasAttribute('id')) {
-
-    }
-    console.log(`click ${e.target}`)
+    const feature = findFeatureByElement(e.target as Element);
+    setSelectedFeature(feature?.svgId === selectedFeature?.svgId
+      ? null
+      : feature);
   }
 
   const handleMouseOver = (e: React.MouseEvent) => {
     const el = e.target as Element;
-    if (el.namespaceURI === 'http://www.w3.org/2000/svg') {
-      setHoveredId(el.getAttribute('inkscape:label') || el.id);
+    const feature = findFeatureByElement(el);
+    if (feature) {
+      setHoveredFeature(feature);
+    } else {
+      setHoveredFeature(null)
     }
   }
+
   const handleMouseOut = (e: React.MouseEvent) => {
-    setHoveredId(null);
+    setHoveredFeature(null);
   }
+
+  if (!diagram) return <div>Loading ...</div>;
 
   return (
     <div
       className="flex flex-col h-[100vh]"
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      onClick={handleClick}
     >
-      <header className="flex-initial">{diagram.title} {hoveredId}</header>
+      <header className="flex-initial">
+        {diagram.title} {hoveredFeature?.name}
+      </header>
       <SvgDiagram
         src={`/api/diagrams/${diagram.id}`}
-        className="overflow-hidden flex-auto"
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+        onClick={handleClick}
+      />
+      <DetailView
+        feature={selectedFeature}
+        onClose={() => setSelectedFeature(null)}
       />
       <footer className="flex-initial">gardenapp</footer>
-    </div>
+    </div >
   )
 }

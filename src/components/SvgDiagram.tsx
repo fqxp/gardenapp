@@ -1,15 +1,15 @@
-'use client';
-
-import { argv0 } from "process";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 interface Props {
   src: string
-  className: string
+  onMouseOver: (e: React.MouseEvent) => void
+  onMouseOut: (e: React.MouseEvent) => void
+  onClick: (e: React.MouseEvent) => void
+  hoveredFeatureId: string | null
 }
 
-export default function SvgDiagram({ src, className }: Props) {
+export default function SvgDiagram({ src, onMouseOver, onMouseOut, onClick, hoveredFeatureId }: Props) {
   const [error, setError] = useState<boolean>(false);
   const [svgData, setSvgData] = useState<string | null>(null);
   const scaleUp = true;
@@ -32,14 +32,12 @@ export default function SvgDiagram({ src, className }: Props) {
   }, [src])
 
   useEffect(() => {
-    console.log('useeffect svgdata svgwrapper')
     if (!svgData) return;
     if (!svgWrapper) return;
 
     const parser = new DOMParser();
     const svgDocument: XMLDocument = parser.parseFromString(svgData, "image/svg+xml");
     const svgElement = svgDocument.children[0] as SVGSVGElement;
-    console.log(`svgElement ${JSON.stringify(svgElement)}`)
 
     svgWrapper.childNodes.forEach((childNode) => svgWrapper.removeChild(childNode));
     svgWrapper.appendChild(svgElement);
@@ -68,7 +66,6 @@ export default function SvgDiagram({ src, className }: Props) {
   ]);
 
   const handleResize = useCallback(() => {
-    console.log('handleserize');
     var width, height;
     if (container !== null) {
       const rect = container.getBoundingClientRect();
@@ -95,24 +92,18 @@ export default function SvgDiagram({ src, className }: Props) {
     ]
     setImageNaturalWidth(width);
     setImageNaturalHeight(height);
-    console.log(`naturl [${width}, ${height}]`)
   };
 
-  // useEffect(() => {
-  //   const image = new Image();
-  //   image.onload = () => handleImageOnLoad(image);
-  //   image.src = src;
-  // }, [src]);
-
   if (error) return <div>Fehler: {error}</div>;
-
-  console.log(`imageScale ${imageScale} container [${containerWidth}, ${containerHeight}] natural [${imageNaturalWidth}, ${imageNaturalHeight}]`);
 
   return (
     <div
       ref={(el: HTMLDivElement | null) => setContainer(el)}
       className="w-[100%] h-[100%] relative"
       key={`${containerWidth}x${containerHeight}`}
+      onMouseOver={onMouseOver}
+      onMouseOut={onMouseOut}
+      onClick={onClick}
     >
       {imageScale === 0
         ? <div ref={(el: HTMLDivElement | null) => setSvgWrapper(el)} />

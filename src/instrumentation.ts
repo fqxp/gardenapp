@@ -6,7 +6,7 @@ export const register = async () => {
 
     // const diagrams = await prisma.diagram.findMany();
     // await Promise.all(diagrams.map(async (diagram: Diagram) => {
-    //   const elements = await prisma.element.findMany({
+    //   const features = await prisma.feature.findMany({
     //     where: { diagramId: diagram.id },
     //     select: { svgId: true }
     //   });
@@ -14,12 +14,12 @@ export const register = async () => {
     //   extractSvgIds(diagram);
     // }));
 
-    // new Worker('updateElements', async () => {
+    // new Worker('updateFeatures', async () => {
     //   const diagrams = await prisma.diagram.findMany();
     //
     //   diagrams.forEach((diagram: Diagram) => {
-    //     diagram.elements.forEach((element: Element) => {
-    //       console.log(`element: ${element}`)
+    //     diagram.features.forEach((feature: Feature) => {
+    //       console.log(`feature: ${feature}`)
     //     });
     //   })
     // }, {
